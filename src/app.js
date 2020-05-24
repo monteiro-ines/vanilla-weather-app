@@ -1,19 +1,23 @@
 function formatDate (timestamp){
 let date  = new Date(timestamp);
-let hours =  date.getHours();
-let minutes = date.getMinutes();
-
-if (hours < 10) {
-        hours = `0${hours}`;
-    }
-if (minutes < 10){
-    minutes = `0${ minutes }`;
-}
-
 let days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 let day = days[date.getDay()];
 
-    return `${day} ${hours}:${minutes}`;
+    return `${day} ${formatHours(timestamp)}`;
+}
+
+function formatHours(timestamp){
+    let date = new Date(timestamp);
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+
+    if (hours < 10) {
+        hours = `0${hours}`;
+    }
+    if (minutes < 10) {
+        minutes = `0${minutes}`;
+    }
+    return `${hours}:${minutes}`;
 }
 
 function displayTemperature(response){
@@ -39,10 +43,34 @@ function displayTemperature(response){
     iconElement.setAttribute("alt", response.data.weather[0].description);
 }
 
+function displayForecast(response){
+let forecastElement = document.querySelector("#forecast");
+forecastElement.innerHTML = null;
+let forecast = null;
+
+for (let index = 0; index < 6; index++) {
+    forecast = response.data.list[index];
+    forecastElement.innerHTML += `
+    <div class="col-2">
+        <h3>
+            ${formatHours(forecast.dt * 1000)}
+        </h3>
+        <img src="http://openweathermap.org/img/wn/${forecast.weather[0].icon}@2x.png" alt="">
+        <div class="weather-forecast-temperature">
+            ${Math.round(forecast.main.temp_min)}º - ${Math.round(forecast.main.temp_max)}º
+        </div>
+    </div>
+    `; 
+}   
+}
+
 function search(city){
     let apiKey = "dffc8c427a5c5c2e6c671ca095897824";
     let apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
     axios.get(apiUrl).then(displayTemperature);
+
+    apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
+    axios.get(apiUrl).then(displayForecast);
 }
 
 function handleSubmit (event){
@@ -85,3 +113,4 @@ let celsiusLink = document.querySelector("#celsius-link");
 celsiusLink.addEventListener("click", displayCelsiusTemp);
 
 search ("Porto");
+
